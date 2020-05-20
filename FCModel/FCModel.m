@@ -1113,14 +1113,14 @@ static inline BOOL checkForOpenDatabaseFatal(BOOL fatal)
 + (BOOL)isInTransaction
 {
     __block BOOL inTransaction = NO;
-    [self inDatabaseSync:^(FMDatabase *db) { inTransaction = db.inTransaction; }];
+    [self inDatabaseSync:^(FMDatabase *db) { inTransaction = db.isInTransaction; }];
     return inTransaction;
 }
 
 + (void)performInTransactionForPerformance:(void (^)(void))block
 {
     [self inDatabaseSync:^(FMDatabase *db) {
-        if (db.inTransaction) block();
+        if (db.isInTransaction) block();
         else [self performTransaction:^BOOL{ block(); return YES; }];
     }];
 }
@@ -1130,7 +1130,7 @@ static inline BOOL checkForOpenDatabaseFatal(BOOL fatal)
     __block NSDictionary *changedFieldsToNotify = nil;
 
     [self inDatabaseSync:^(FMDatabase *db) {
-        if (db.inTransaction) [[NSException exceptionWithName:FCModelException reason:@"Cannot nest FCModel transactions" userInfo:nil] raise];
+        if (db.isInTransaction) [[NSException exceptionWithName:FCModelException reason:@"Cannot nest FCModel transactions" userInfo:nil] raise];
         [db beginTransaction];
         g_database.isQueuingNotifications = YES;
         
@@ -1158,7 +1158,7 @@ static inline BOOL checkForOpenDatabaseFatal(BOOL fatal)
 
     __block BOOL success = NO;
     [self inDatabaseSync:^(FMDatabase *db) {
-        if (db.inTransaction) return;
+        if (db.isInTransaction) return;
         queryProfileStart(@"VACUUM");
         [db executeUpdate:@"VACUUM"];
         queryProfileEnd();
