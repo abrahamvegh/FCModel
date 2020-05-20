@@ -703,9 +703,9 @@ static inline BOOL checkForOpenDatabaseFatal(BOOL fatal)
         
             NSDictionary *changes = self.unsavedChanges;
             BOOL dirty = changes.count;
-            if (! dirty && _inDatabaseStatus == FCModelInDatabaseStatusRowExists) { hadChanges = NO; return; }
+			if (! dirty && self->_inDatabaseStatus == FCModelInDatabaseStatusRowExists) { hadChanges = NO; return; }
             
-            BOOL update = (_inDatabaseStatus == FCModelInDatabaseStatusRowExists);
+			BOOL update = (self->_inDatabaseStatus == FCModelInDatabaseStatusRowExists);
             NSArray *columnNames;
             NSMutableArray *values;
             
@@ -785,7 +785,7 @@ static inline BOOL checkForOpenDatabaseFatal(BOOL fatal)
                 newRowValues[fieldName] = obj ?: NSNull.null;
             }];
             self._rowValuesInDatabase = newRowValues;
-            _inDatabaseStatus = FCModelInDatabaseStatusRowExists;
+			self->_inDatabaseStatus = FCModelInDatabaseStatusRowExists;
 
             hadChanges = YES;
         }];
@@ -802,7 +802,7 @@ static inline BOOL checkForOpenDatabaseFatal(BOOL fatal)
 
     fcm_onMainThread(^{
         [g_database inDatabase:^(FMDatabase *db) {
-            if (_inDatabaseStatus == FCModelInDatabaseStatusDeleted) return;
+			if (self->_inDatabaseStatus == FCModelInDatabaseStatusDeleted) return;
             pkValue = self.primaryKey;
             
             __block BOOL success = NO;
@@ -814,7 +814,7 @@ static inline BOOL checkForOpenDatabaseFatal(BOOL fatal)
             g_database.isInInternalWrite = NO;
             if (! success || db.lastErrorCode) [self.class queryFailedInDatabase:db];
 
-            _inDatabaseStatus = FCModelInDatabaseStatusDeleted;
+			self->_inDatabaseStatus = FCModelInDatabaseStatusDeleted;
         }];
     
         [g_instances[self.class] removeObjectForKey:pkValue];
